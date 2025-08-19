@@ -33,11 +33,10 @@ services:
           name: redis
           property: connectionString
       - key: GEMINI_API_KEY
-        value: AIzaSyCyjfH5GrYf0gaCv0Hb_KIYR6nPEAWrDCs
+        value: your-api-key-here
       - key: HOST
         value: 0.0.0.0
-      - key: PORT
-        value: 10000
+      # ⚠️ Removed PORT, Render sets this automatically
 
   # Frontend service
   - type: web
