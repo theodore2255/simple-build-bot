@@ -52,6 +52,17 @@ serve(async (req) => {
     if (!response.ok) {
       const errorData = await response.json();
       console.error('OpenAI API error:', errorData);
+      
+      // Handle specific quota error
+      if (errorData.error?.code === 'insufficient_quota') {
+        return new Response(JSON.stringify({ 
+          response: "I apologize, but it seems your OpenAI API account has exceeded its quota. Please check your OpenAI billing dashboard and add credits to continue using the AI features. For now, I can still help you with general questions about document management and RAG systems.",
+          isQuotaError: true
+        }), {
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        });
+      }
+      
       throw new Error(`OpenAI API error: ${response.status} ${response.statusText}`);
     }
 

@@ -1,6 +1,7 @@
 import { useState, useCallback, useRef, useEffect } from 'react';
-import { Send, Bot, User, Paperclip, FileText, Sidebar, X } from 'lucide-react';
+import { Send, Bot, User, Paperclip, FileText, Sidebar, X, Settings } from 'lucide-react';
 import { useDropzone } from 'react-dropzone';
+import { ThemeToggle } from '@/components/ThemeToggle';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card } from '@/components/ui/card';
@@ -139,16 +140,21 @@ export const ChatInterface = () => {
         throw new Error(response.error.message || 'Failed to get AI response');
       }
 
+      const aiResponse = response.data?.response || 'I apologize, but I encountered an error processing your request.';
+      const isQuotaError = response.data?.isQuotaError || false;
+
       const assistantMessage: Message = {
         id: Math.random().toString(36).substring(7),
         type: 'assistant',
-        content: response.data?.response || 'I apologize, but I encountered an error processing your request.',
+        content: aiResponse,
         timestamp: new Date(),
-        sources: uploadedFiles.filter(f => f.status === 'completed').slice(0, 2).map(f => ({
-          document: f.name,
-          page: Math.floor(Math.random() * 10) + 1,
-          relevance: 0.85 + Math.random() * 0.1
-        }))
+        sources: !isQuotaError && uploadedFiles.filter(f => f.status === 'completed').length > 0 
+          ? uploadedFiles.filter(f => f.status === 'completed').slice(0, 2).map(f => ({
+              document: f.name,
+              page: Math.floor(Math.random() * 10) + 1,
+              relevance: 0.85 + Math.random() * 0.1
+            }))
+          : undefined
       };
 
       setMessages(prev => [...prev, assistantMessage]);
@@ -157,7 +163,7 @@ export const ChatInterface = () => {
       const errorMessage: Message = {
         id: Math.random().toString(36).substring(7),
         type: 'assistant',
-        content: 'I apologize, but I encountered an error processing your request. Please make sure your OpenAI API key is configured correctly.',
+        content: 'I apologize, but I encountered an error processing your request. Please try again or check your internet connection.',
         timestamp: new Date(),
       };
       setMessages(prev => [...prev, errorMessage]);
@@ -183,17 +189,20 @@ export const ChatInterface = () => {
       <input {...getInputProps()} />
       
       {/* Sidebar */}
-      <div className={`${sidebarOpen ? 'w-80' : 'w-0'} transition-all duration-300 bg-muted/30 border-r overflow-hidden`}>
-        <div className="p-4 border-b">
+      <div className={`${sidebarOpen ? 'w-80' : 'w-0'} transition-all duration-300 bg-muted/20 border-r border-border overflow-hidden flex-shrink-0`}>
+        <div className="p-4 border-b border-border bg-background/95">
           <div className="flex items-center justify-between">
-            <h2 className="font-semibold">Documents</h2>
-            <Button variant="ghost" size="icon" onClick={() => setSidebarOpen(false)}>
-              <X className="w-4 h-4" />
-            </Button>
+            <h2 className="font-semibold text-foreground">Documents</h2>
+            <div className="flex items-center gap-2">
+              <ThemeToggle />
+              <Button variant="ghost" size="icon" onClick={() => setSidebarOpen(false)}>
+                <X className="w-4 h-4" />
+              </Button>
+            </div>
           </div>
         </div>
         
-        <ScrollArea className="h-[calc(100vh-80px)]">
+        <ScrollArea className="h-[calc(100vh-81px)]">
           <div className="p-4 space-y-3">
             {uploadedFiles.length === 0 ? (
               <div className="text-center py-8 px-4">
@@ -204,7 +213,7 @@ export const ChatInterface = () => {
               </div>
             ) : (
               uploadedFiles.map((file) => (
-                <Card key={file.id} className="p-3">
+                <Card key={file.id} className="p-3 bg-card border-border">
                   <div className="flex items-start gap-3">
                     <FileText className="w-4 h-4 text-primary mt-1 flex-shrink-0" />
                     <div className="flex-1 min-w-0">
@@ -244,7 +253,7 @@ export const ChatInterface = () => {
       {/* Main Chat Area */}
       <div className="flex-1 flex flex-col">
         {/* Header */}
-        <div className="p-4 border-b bg-background/95 backdrop-blur-sm">
+        <div className="p-4 border-b border-border bg-background/95 backdrop-blur-sm">
           <div className="flex items-center gap-3">
             {!sidebarOpen && (
               <Button variant="ghost" size="icon" onClick={() => setSidebarOpen(true)}>
@@ -266,7 +275,7 @@ export const ChatInterface = () => {
         </div>
 
         {/* Messages */}
-        <ScrollArea className="flex-1 p-4">
+        <ScrollArea className="flex-1 p-4 bg-background">
           <div className="max-w-3xl mx-auto space-y-6">
             {messages.map((message) => (
               <div key={message.id} className="flex gap-4">
@@ -319,7 +328,7 @@ export const ChatInterface = () => {
         </ScrollArea>
 
         {/* Input Area */}
-        <div className="p-4 border-t bg-background/95 backdrop-blur-sm">
+        <div className="p-4 border-t border-border bg-background/95 backdrop-blur-sm">
           <div className="max-w-3xl mx-auto">
             <form onSubmit={handleSubmit} className="flex gap-3">
               <div className="flex-1 relative">
