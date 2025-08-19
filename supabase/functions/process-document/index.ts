@@ -1,7 +1,7 @@
 import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 
-const openAIApiKey = Deno.env.get('OPENAI_API_KEY');
+const geminiApiKey = Deno.env.get('GEMINI_API_KEY');
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -15,8 +15,8 @@ serve(async (req) => {
   }
 
   try {
-    if (!openAIApiKey) {
-      throw new Error('OpenAI API key not configured');
+    if (!geminiApiKey) {
+      throw new Error('Gemini API key not configured');
     }
 
     const { text, fileName } = await req.json();
@@ -25,27 +25,28 @@ serve(async (req) => {
       throw new Error('Text content and filename are required');
     }
 
-    // Create embeddings for the document text
-    const embeddingResponse = await fetch('https://api.openai.com/v1/embeddings', {
+    // Create embeddings for the document text using Gemini
+    const embeddingResponse = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/text-embedding-004:embedContent?key=${geminiApiKey}`, {
       method: 'POST',
       headers: {
-        'Authorization': `Bearer ${openAIApiKey}`,
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        model: 'text-embedding-3-small',
-        input: text,
+        model: 'models/text-embedding-004',
+        content: {
+          parts: [{ text: text }]
+        },
       }),
     });
 
     if (!embeddingResponse.ok) {
       const errorData = await embeddingResponse.json();
-      console.error('OpenAI Embedding API error:', errorData);
-      throw new Error(`OpenAI Embedding API error: ${embeddingResponse.status}`);
+      console.error('Gemini Embedding API error:', errorData);
+      throw new Error(`Gemini Embedding API error: ${embeddingResponse.status}`);
     }
 
     const embeddingData = await embeddingResponse.json();
-    const embedding = embeddingData.data[0].embedding;
+    const embedding = embeddingData.embedding.values;
 
     // Chunk the text into smaller pieces for better retrieval
     const chunks = chunkText(text, 1000); // 1000 character chunks with overlap
