@@ -1,0 +1,19 @@
+Test Document for RAG System
+
+This is a sample document for testing the Retrieval-Augmented Generation (RAG) system.
+
+Key Information:
+- Company: PanScience Innovations
+- Project: LLM Specialist Assignment
+- Technology: React, TypeScript, Vite, Supabase, Gemini AI
+- Features: Document upload, PDF text extraction, AI-powered responses
+
+System Components:
+1. Frontend: Built with React and TypeScript
+2. UI: Uses shadcn/ui components with Tailwind CSS
+3. PDF Processing: Uses pdfjs-dist library
+4. AI Integration: Google Gemini 1.5 Flash model
+5. Backend: Supabase for data storage and Edge Functions
+
+This document can be used to test the document upload and processing functionality.
+The system should be able to extract this text and use it to answer questions about the project.

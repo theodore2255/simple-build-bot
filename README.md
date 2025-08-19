@@ -1,132 +1,297 @@
-# RAG Assistant
+# RAG Document Assistant
 
-A powerful document-based AI assistant built with React, Supabase, and Google's Gemini API. Upload documents and ask questions to get intelligent answers based on your content.
+A modern, scalable Retrieval-Augmented Generation (RAG) system built with React, FastAPI, and Google Gemini AI. Upload documents, ask questions, and get intelligent answers based on your document content.
 
-## Features
+## 🚀 Features
 
-- 📄 **Document Upload**: Support for PDF, TXT, DOC, and DOCX files
-- 🤖 **AI-Powered Chat**: Powered by Google's Gemini 1.5 Flash model
-- 🔍 **Smart Document Processing**: Automatic text extraction and chunking
-- 💾 **Vector Storage**: Documents are processed and stored for quick retrieval
-- 🎨 **Modern UI**: Beautiful, responsive interface built with shadcn/ui components
-- 🌙 **Dark/Light Theme**: Toggle between themes for comfortable viewing
+- **Document Upload & Processing**: Support for PDF, DOCX, and TXT files
+- **Intelligent Text Chunking**: Smart document segmentation for optimal retrieval
+- **Vector Search**: ChromaDB-powered semantic search with sentence transformers
+- **AI-Powered Responses**: Google Gemini integration for context-aware answers
+- **Modern UI**: React + TypeScript frontend with drag-and-drop file upload
+- **Scalable Backend**: FastAPI with PostgreSQL and Redis for production use
+- **Docker Support**: Complete containerization for easy deployment
+- **Development Tools**: Hot reload, type safety, and comprehensive logging
 
-## Prerequisites
+## 🏗️ Architecture
 
-- Node.js 18+ and npm/yarn
-- Supabase account and project
-- Google AI Studio API key for Gemini
-
-## Setup
-
-### 1. Clone and Install Dependencies
-
-```bash
-git clone <repository-url>
-cd simple-build-bot
-npm install
+```
+┌─────────────────┐    ┌─────────────────┐    ┌─────────────────┐
+│   React Frontend │────│  FastAPI Backend │────│   PostgreSQL    │
+│   (TypeScript)   │    │    (Python)     │    │   (Documents)   │
+└─────────────────┘    └─────────────────┘    └─────────────────┘
+                                │
+                       ┌─────────────────┐    ┌─────────────────┐
+                       │    ChromaDB     │────│   Google Gemini │
+                       │   (Vectors)     │    │   (AI Responses)│
+                       └─────────────────┘    └─────────────────┘
 ```
 
-### 2. Environment Variables
+## 📋 Prerequisites
 
-Create a `.env.local` file in the root directory:
+### For Docker Deployment (Recommended)
+- Docker Desktop
+- Docker Compose
+- Google Gemini API Key
 
+### For Development
+- Node.js 18+
+- Python 3.11+
+- PostgreSQL (or Docker)
+- Google Gemini API Key
+
+## 🚀 Quick Start (Docker)
+
+1. **Clone and setup**:
+   ```bash
+   git clone <your-repo-url>
+   cd rag-document-assistant
+   ```
+
+2. **Configure environment**:
+   ```bash
+   # Windows
+   deploy.bat
+   
+   # Linux/macOS
+   ./deploy.sh
+   ```
+
+3. **Set your API key** in `backend/.env`:
+   ```env
+   GEMINI_API_KEY=your_actual_api_key_here
+   ```
+
+4. **Deploy**:
+   ```bash
+   # Windows
+   deploy.bat
+   
+   # Linux/macOS
+   ./deploy.sh
+   ```
+
+5. **Access the application**:
+   - Frontend: http://localhost:3000
+   - API Documentation: http://localhost:8000/docs
+   - Backend API: http://localhost:8000
+
+## 🛠️ Development Setup
+
+1. **Setup development environment**:
+   ```bash
+   # Windows
+   setup-dev.bat
+   
+   # Linux/macOS - coming soon
+   ```
+
+2. **Configure API keys**:
+   - Edit `backend/.env` and set `GEMINI_API_KEY`
+   - Edit `.env.local` and set `VITE_GEMINI_API_KEY`
+
+3. **Start services**:
+
+   **Backend** (Terminal 1):
+   ```bash
+   cd backend
+   # Windows
+   venv\Scripts\activate.bat
+   # Linux/macOS
+   source venv/bin/activate
+   
+   uvicorn main:app --reload --host 127.0.0.1 --port 8000
+   ```
+
+   **Frontend** (Terminal 2):
+   ```bash
+   npm run dev
+   ```
+
+4. **Access**:
+   - Frontend: http://localhost:3000
+   - Backend: http://localhost:8000/docs
+
+## 📱 Project Structure
+
+```
+rag-document-assistant/
+├── src/                          # React frontend
+│   ├── components/              # React components
+│   ├── services/               # API services
+│   └── types/                  # TypeScript types
+├── backend/                     # FastAPI backend
+│   ├── app/                    # Application code
+│   │   ├── services/          # Business logic
+│   │   ├── models.py          # Database models
+│   │   └── schemas.py         # Pydantic schemas
+│   ├── main.py                # FastAPI app
+│   └── requirements.txt       # Python dependencies
+├── docker-compose.yml          # Multi-service orchestration
+├── deploy.bat                  # Windows deployment script
+└── README.md                   # This file
+```
+
+## 🔧 Configuration
+
+### Environment Variables
+
+**Backend (`backend/.env`)**:
 ```env
-VITE_SUPABASE_URL=your_supabase_project_url
-VITE_SUPABASE_ANON_KEY=your_supabase_anon_key
+DATABASE_URL=postgresql://rag_user:rag_password@localhost:5432/rag_documents
+GEMINI_API_KEY=your_gemini_api_key
+HOST=0.0.0.0
+PORT=8000
+CORS_ORIGINS=http://localhost:3000
+MAX_DOCUMENT_SIZE_MB=10
+MAX_DOCUMENTS_PER_USER=20
+CHUNK_SIZE=1000
+CHUNK_OVERLAP=200
+EMBEDDING_MODEL=all-MiniLM-L6-v2
 ```
 
-### 3. Supabase Setup
+**Frontend (`.env.local`)**:
+```env
+VITE_API_URL=http://localhost:8000
+VITE_GEMINI_API_KEY=your_gemini_api_key
+```
 
-1. Go to your Supabase project dashboard
-2. Navigate to SQL Editor
-3. Run the migration script from `supabase/migrations/001_create_documents_table.sql`
+## 🔌 API Endpoints
 
-### 4. Supabase Edge Functions
+### Documents
+- `POST /documents/upload` - Upload and process documents
+- `GET /documents/` - List all documents
+- `DELETE /documents/{document_id}` - Delete a document
+- `POST /documents/query` - Query documents with AI
 
-Deploy the edge functions to your Supabase project:
+### Health
+- `GET /health` - Service health check
+
+For detailed API documentation, visit http://localhost:8000/docs when running.
+
+## 🧪 Usage Examples
+
+### Upload a Document
+```bash
+curl -X POST "http://localhost:8000/documents/upload" \
+  -F "file=@document.pdf"
+```
+
+### Query Documents
+```bash
+curl -X POST "http://localhost:8000/documents/query" \
+  -H "Content-Type: application/json" \
+  -d '{"query": "What is the main topic of the document?"}'
+```
+
+## 🐳 Docker Commands
 
 ```bash
-# Install Supabase CLI if you haven't already
-npm install -g supabase
+# Start all services
+docker-compose up -d
 
-# Login to Supabase
-supabase login
+# View logs
+docker-compose logs -f backend
+docker-compose logs -f frontend
 
-# Link your project
-supabase link --project-ref your_project_ref
+# Stop services
+docker-compose down
 
-# Deploy functions
-supabase functions deploy chat-completion
-supabase functions deploy process-document
+# Rebuild and restart
+docker-compose build --no-cache
+docker-compose up -d
+
+# Monitor services
+docker-compose ps
 ```
 
-### 5. Set Environment Variables for Edge Functions
+## 🔍 Troubleshooting
 
-In your Supabase dashboard, go to Settings > Edge Functions and set:
+### Common Issues
 
-- `GEMINI_API_KEY`: Your Google AI Studio API key
+**Backend not starting**:
+- Check if GEMINI_API_KEY is set in `backend/.env`
+- Verify PostgreSQL is running and accessible
+- Check logs: `docker-compose logs backend`
 
-### 6. Run the Application
+**Frontend not accessible**:
+- Ensure backend is running on port 8000
+- Check CORS configuration in backend
+- Verify API URL in `.env.local`
+
+**Document processing fails**:
+- Check file size limits (default: 10MB)
+- Verify file format (PDF, DOCX, TXT supported)
+- Check Gemini API quota and limits
+
+### Logs and Monitoring
 
 ```bash
-npm run dev
+# Application logs
+docker-compose logs -f
+
+# Database logs
+docker-compose logs postgres
+
+# System resources
+docker stats
+
+# Health checks
+curl http://localhost:8000/health
+curl http://localhost:3000
 ```
 
-The application will be available at `http://localhost:5173`
+## 🚀 Performance Tuning
 
-## How It Works
+### Database Optimization
+- Adjust PostgreSQL `shared_buffers` and `work_mem`
+- Create indexes on frequently queried columns
+- Use connection pooling for high load
 
-1. **Document Upload**: Users drag and drop documents into the interface
-2. **Text Extraction**: The system extracts text content from various file formats
-3. **Chunking**: Content is split into smaller, searchable chunks
-4. **Storage**: Processed documents are stored in Supabase with their content
-5. **AI Chat**: When users ask questions, relevant document content is retrieved and sent to Gemini
-6. **Intelligent Responses**: Gemini provides answers based on the actual document content
+### Vector Search Optimization
+- Tune ChromaDB collection settings
+- Adjust chunk size and overlap for your documents
+- Consider different embedding models for better accuracy
 
-## File Format Support
+### API Rate Limiting
+- Configure Nginx rate limits in `nginx.conf`
+- Implement Redis-based caching for frequent queries
+- Use async processing for large document uploads
 
-- **TXT**: Full text extraction
-- **PDF**: Basic text extraction (enhanced extraction with proper libraries)
-- **DOC/DOCX**: Text content extraction
-- **Other formats**: Convert to supported formats for best results
+## 📚 Technical Details
 
-## Architecture
+### Technologies Used
+- **Frontend**: React 18, TypeScript, Vite, Tailwind CSS
+- **Backend**: FastAPI, SQLAlchemy, Pydantic
+- **Database**: PostgreSQL, ChromaDB
+- **AI**: Google Gemini Pro, Sentence Transformers
+- **Infrastructure**: Docker, Nginx, Redis
 
-- **Frontend**: React + TypeScript + Vite
-- **UI Components**: shadcn/ui + Tailwind CSS
-- **Backend**: Supabase Edge Functions
-- **AI**: Google Gemini 1.5 Flash API
-- **Database**: Supabase PostgreSQL
-- **Storage**: Supabase Storage (for future enhancements)
+### Document Processing Pipeline
+1. File upload and validation
+2. Text extraction (PDF/DOCX parsing)
+3. Intelligent chunking with overlap
+4. Embedding generation using sentence transformers
+5. Vector storage in ChromaDB
+6. Metadata storage in PostgreSQL
 
-## Troubleshooting
+### Query Pipeline
+1. User query embedding
+2. Similarity search in ChromaDB
+3. Context retrieval and ranking
+4. Gemini API call with context
+5. Response generation and formatting
 
-### Gemini API Issues
-- Check your API key in Supabase Edge Functions environment variables
-- Verify your Google AI Studio quota and billing
-- Check the browser console for error messages
+## 🔮 Roadmap
 
-### Document Processing Issues
-- Ensure documents are in supported formats
-- Check file size limits (recommended: under 10MB)
-- Verify Supabase connection and permissions
-
-### Database Issues
-- Run the migration script to create the documents table
-- Check Supabase Row Level Security policies
-- Verify your project is properly linked
-
-## Future Enhancements
-
-- [ ] Enhanced PDF text extraction with pdf-parse
-- [ ] Word document processing with mammoth.js
-- [ ] Vector embeddings for semantic search
-- [ ] Document versioning and history
-- [ ] Collaborative document sharing
-- [ ] Advanced search and filtering
-- [ ] Export chat conversations
-- [ ] Multi-language support
+- [ ] Multi-user authentication and authorization
+- [ ] Advanced document search and filtering
+- [ ] Real-time collaboration features
+- [ ] Integration with cloud storage providers
+- [ ] Advanced analytics and usage metrics
+- [ ] Support for additional document formats
+- [ ] Custom embedding models
+- [ ] Export and backup functionality
 
 ## Contributing
 

@@ -9,6 +9,7 @@ import { Badge } from '@/components/ui/badge';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Progress } from '@/components/ui/progress';
 import { useToast } from '@/hooks/use-toast';
+import { supabase } from '@/integrations/supabase/client';
 
 interface Message {
   id: string;
@@ -26,9 +27,11 @@ interface UploadedFile {
   id: string;
   name: string;
   size: number;
+  type: string;
   status: 'uploading' | 'processing' | 'completed' | 'error';
   progress: number;
-  content?: string; // Added content field
+  fileUri?: string; // Gemini file URI
+  file?: File; // Store the original file for direct upload
 }
 
 export const ChatInterface = () => {
@@ -64,8 +67,10 @@ export const ChatInterface = () => {
         id: fileId,
         name: file.name,
         size: file.size,
+        type: file.type,
         status: 'uploading',
         progress: 0,
+        file: file,
       };
 
       setUploadedFiles(prev => [...prev, newFile]);
@@ -73,26 +78,26 @@ export const ChatInterface = () => {
       try {
         // Update status to processing
         setUploadedFiles(prev => prev.map(f => 
-          f.id === fileId ? { ...f, status: 'processing', progress: 50 } : f
+          f.id === fileId ? { ...f, status: 'processing', progress: 25 } : f
         ));
 
-        // Extract text content from the file
-        const content = await extractTextFromFile(file);
-        console.log('Extracted content:', content.substring(0, 200) + '...');
+        // Upload file to Gemini API
+        const fileUri = await uploadFileToGemini(file);
+        console.log('File uploaded to Gemini:', fileUri);
+        
+        // Update progress
+        setUploadedFiles(prev => prev.map(f => 
+          f.id === fileId ? { ...f, progress: 75 } : f
+        ));
         
         // Update status to completed
         setUploadedFiles(prev => prev.map(f => 
-          f.id === fileId ? { ...f, status: 'completed', progress: 100 } : f
-        ));
-
-        // Store the file content for AI responses
-        setUploadedFiles(prev => prev.map(f => 
-          f.id === fileId ? { ...f, content: content } : f
+          f.id === fileId ? { ...f, status: 'completed', progress: 100, fileUri: fileUri } : f
         ));
 
         toast({
           title: "Document processed successfully",
-          description: `${file.name} is now ready for queries`,
+          description: `${file.name} is now ready for queries with Gemini AI`,
         });
 
       } catch (error) {
@@ -110,55 +115,30 @@ export const ChatInterface = () => {
     });
   }, [toast]);
 
-  const extractTextFromFile = async (file: File): Promise<string> => {
-    try {
-      if (file.type === 'text/plain') {
-        return await file.text();
-      } else if (file.type === 'application/pdf') {
-        // Basic PDF text extraction
-        const arrayBuffer = await file.arrayBuffer();
-        const uint8Array = new Uint8Array(arrayBuffer);
-        const text = new TextDecoder().decode(uint8Array);
-        
-        // Look for text patterns in the PDF
-        const textMatches = text.match(/\(([^)]+)\)/g);
-        if (textMatches && textMatches.length > 0) {
-          return textMatches
-            .map(match => match.replace(/[()]/g, ''))
-            .filter(text => text.length > 3 && !text.includes('\\'))
-            .join(' ');
-        }
-        
-        return `PDF Document: ${file.name}\n\nContent extracted from PDF. The document contains ${Math.floor(file.size / 1024)} KB of data.`;
-        
-      } else if (file.type.includes('word') || file.type.includes('document')) {
-        // Word document text extraction
-        const arrayBuffer = await file.arrayBuffer();
-        const uint8Array = new Uint8Array(arrayBuffer);
-        const text = new TextDecoder().decode(uint8Array);
-        
-        // Extract readable text (filter out binary data)
-        const readableText = text
-          .split('')
-          .filter(char => char.charCodeAt(0) >= 32 && char.charCodeAt(0) <= 126)
-          .join('')
-          .replace(/\s+/g, ' ')
-          .trim();
-        
-        if (readableText.length > 100) {
-          return readableText;
-        }
-        
-        return `Word Document: ${file.name}\n\nContent extracted from Word document.`;
-      }
-      
-      return `Unsupported file type: ${file.type}. Please use text files (.txt) for best results.`;
-      
-    } catch (error) {
-      console.error('Error extracting text from file:', error);
-      throw new Error(`Failed to extract text from ${file.name}: ${error.message}`);
+  // Upload file directly to Gemini API
+  const uploadFileToGemini = async (file: File): Promise<string> => {
+    const geminiApiKey = import.meta.env.VITE_GEMINI_API_KEY || 'AIzaSyCyjfH5GrYf0gaCv0Hb_KIYR6nPEAWrDCs';
+    
+    // Step 1: Upload the file to Gemini Files API
+    const formData = new FormData();
+    formData.append('file', file);
+    
+    const uploadResponse = await fetch(`https://generativelanguage.googleapis.com/upload/v1beta/files?key=${geminiApiKey}`, {
+      method: 'POST',
+      body: formData,
+    });
+    
+    if (!uploadResponse.ok) {
+      const errorText = await uploadResponse.text();
+      throw new Error(`Failed to upload file to Gemini: ${uploadResponse.status} ${errorText}`);
     }
+    
+    const uploadData = await uploadResponse.json();
+    console.log('File uploaded to Gemini:', uploadData);
+    
+    return uploadData.file.uri;
   };
+
 
   const { getRootProps, getInputProps, isDragActive } = useDropzone({
     onDrop,
@@ -188,48 +168,95 @@ export const ChatInterface = () => {
     setIsLoading(true);
 
     try {
-      // Get document content for context
-      const completedFiles = uploadedFiles.filter(f => f.status === 'completed' && f.content);
-      let response = '';
-
+      // Get completed files with Gemini URIs
+      const completedFiles = uploadedFiles.filter(f => f.status === 'completed' && f.fileUri);
+      
       if (completedFiles.length === 0) {
-        response = "I don't have any documents to work with yet. Please upload some documents first, and I'll be able to answer questions about their content.";
+        const assistantMessage: Message = {
+          id: Math.random().toString(36).substring(7),
+          type: 'assistant',
+          content: "I don't have any documents to work with yet. Please upload some documents first, and I'll be able to answer questions about their content.",
+          timestamp: new Date(),
+        };
+        setMessages(prev => [...prev, assistantMessage]);
       } else {
-        // Create context from uploaded documents
-        const documentContext = completedFiles.map(file => 
-          `Document: ${file.name}\nContent: ${file.content}`
-        ).join('\n\n---\n\n');
-
-        // Analyze the user's question and provide intelligent response based on document content
-        if (input.toLowerCase().includes('what') || input.toLowerCase().includes('tell me')) {
-          // Find relevant information from documents
-          const relevantContent = findRelevantContent(input, documentContext);
-          response = `Based on the uploaded documents, here's what I found:\n\n${relevantContent}`;
-        } else if (input.toLowerCase().includes('how') || input.toLowerCase().includes('explain')) {
-          response = `Let me explain based on the documents:\n\n${documentContext.substring(0, 500)}...\n\nThis is the content from your uploaded documents. You can ask me specific questions about any part of this content.`;
-        } else {
-          // General response with document summary
-          const summary = completedFiles.map(file => 
-            `${file.name}: ${file.content.substring(0, 100)}...`
-          ).join('\n\n');
+        // Call Gemini API with direct file references
+        try {
+          const geminiApiKey = import.meta.env.VITE_GEMINI_API_KEY || 'AIzaSyCyjfH5GrYf0gaCv0Hb_KIYR6nPEAWrDCs';
           
-          response = `I have ${completedFiles.length} document(s) available:\n\n${summary}\n\nAsk me specific questions about any of these documents and I'll provide detailed answers based on their content.`;
+          // Create content parts with file references and user query
+          const contentParts = [
+            { text: `You are a helpful AI assistant. Analyze the uploaded documents and answer questions based on their content. Here is the user's question: ${input}` },
+            ...completedFiles.map(file => ({
+              file_data: {
+                file_uri: file.fileUri,
+                mime_type: file.type
+              }
+            }))
+          ];
+
+          // Format messages for Gemini API with file attachments
+          const geminiMessages = [
+            {
+              role: 'user',
+              parts: contentParts
+            }
+          ];
+
+          const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${geminiApiKey}`, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+              contents: geminiMessages,
+              generationConfig: {
+                temperature: 0.7,
+                maxOutputTokens: 2000,
+              },
+            }),
+          });
+
+          if (!response.ok) {
+            const errorText = await response.text();
+            console.error('Gemini API error:', response.status, errorText);
+            throw new Error(`Gemini API error: ${response.status} ${errorText}`);
+          }
+
+          const data = await response.json();
+          
+          if (!data.candidates || !data.candidates[0] || !data.candidates[0].content) {
+            throw new Error('Invalid response from Gemini API');
+          }
+          
+          const aiResponse = data.candidates[0].content.parts[0].text;
+
+          const assistantMessage: Message = {
+            id: Math.random().toString(36).substring(7),
+            type: 'assistant',
+            content: aiResponse,
+            timestamp: new Date(),
+            sources: completedFiles.map(file => ({
+              document: file.name,
+              page: 1,
+              relevance: 0.95
+            }))
+          };
+
+          setMessages(prev => [...prev, assistantMessage]);
+        } catch (apiError) {
+          console.error('API call failed:', apiError);
+          
+          const errorMessage: Message = {
+            id: Math.random().toString(36).substring(7),
+            type: 'assistant',
+            content: `I encountered an error while processing your request: ${apiError.message}\n\nPlease try again or check if the documents were uploaded correctly.`,
+            timestamp: new Date(),
+          };
+          
+          setMessages(prev => [...prev, errorMessage]);
         }
       }
-
-      const assistantMessage: Message = {
-        id: Math.random().toString(36).substring(7),
-        type: 'assistant',
-        content: response,
-        timestamp: new Date(),
-        sources: completedFiles.map(file => ({
-          document: file.name,
-          page: 1,
-          relevance: 0.95
-        }))
-      };
-
-      setMessages(prev => [...prev, assistantMessage]);
     } catch (error) {
       console.error('Error processing request:', error);
       const errorMessage: Message = {
