@@ -169,6 +169,103 @@ VITE_GEMINI_API_KEY=your_gemini_api_key
 
 For detailed API documentation, visit http://localhost:8000/docs when running.
 
+## 🧪 Testing & Validation
+
+### Running Tests
+
+The project includes comprehensive unit and integration tests:
+
+```bash
+# Navigate to backend directory
+cd backend
+
+# Install test dependencies
+pip install pytest pytest-asyncio httpx
+
+# Run unit tests for document retrieval
+pytest tests/test_document_retrieval.py -v
+
+# Run integration tests for query handling
+pytest tests/test_query_integration.py -v
+
+# Run all tests with coverage
+pytest tests/ -v --cov=app
+```
+
+### Test Coverage
+
+Our test suite covers:
+- ✅ Document upload and processing
+- ✅ Document retrieval and listing
+- ✅ Document deletion
+- ✅ Query handling and response generation
+- ✅ Error handling and validation
+- ✅ Database operations
+- ✅ Vector store operations
+- ✅ LLM service integration
+- ✅ API endpoint functionality
+
+## 🤖 LLM Provider Configuration
+
+### Google Gemini (Default)
+
+**Setup Instructions:**
+1. Visit [Google AI Studio](https://makersuite.google.com/app/apikey)
+2. Create a new API key
+3. Add to environment variables:
+
+```env
+GEMINI_API_KEY=your_gemini_api_key_here
+```
+
+**Model Options:**
+- `gemini-pro` (default) - Best for text generation
+- `gemini-pro-vision` - For multimodal tasks
+
+**Configuration:**
+```python
+# In app/services/llm_service.py
+class LLMService:
+    def __init__(self):
+        self.model = "gemini-pro"
+        self.temperature = 0.7
+        self.max_output_tokens = 1024
+```
+
+### OpenAI GPT (Alternative)
+
+**Setup Instructions:**
+1. Visit [OpenAI Platform](https://platform.openai.com/api-keys)
+2. Create a new API key
+3. Add to environment variables:
+
+```env
+OPENAI_API_KEY=your_openai_api_key_here
+# Comment out GEMINI_API_KEY to use OpenAI
+```
+
+**Model Options:**
+- `gpt-3.5-turbo` - Cost-effective, fast responses
+- `gpt-4` - Higher quality, more expensive
+- `gpt-4-turbo` - Latest model with improved performance
+
+**Configuration:**
+```python
+# In app/services/llm_service.py
+class LLMService:
+    def __init__(self):
+        self.model = "gpt-3.5-turbo"
+        self.temperature = 0.7
+        self.max_tokens = 1024
+```
+
+### Switching Between Providers
+
+The system automatically detects available API keys:
+1. **Priority Order**: Gemini → OpenAI
+2. **Fallback**: If primary fails, switches to secondary
+3. **Error Handling**: Graceful degradation with informative messages
+
 ## 🧪 Usage Examples
 
 ### Upload a Document
@@ -179,9 +276,19 @@ curl -X POST "http://localhost:8000/documents/upload" \
 
 ### Query Documents
 ```bash
-curl -X POST "http://localhost:8000/documents/query" \
+curl -X POST "http://localhost:8000/query" \
   -H "Content-Type: application/json" \
-  -d '{"query": "What is the main topic of the document?"}'
+  -d '{"question": "What is the main topic of the document?", "max_results": 5}'
+```
+
+### List Documents
+```bash
+curl -X GET "http://localhost:8000/documents"
+```
+
+### Delete Document
+```bash
+curl -X DELETE "http://localhost:8000/documents/{document_id}"
 ```
 
 ## 🐳 Docker Commands

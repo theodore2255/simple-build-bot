@@ -1,0 +1,462 @@
+{
+  "info": {
+    "name": "RAG Document Processing API",
+    "description": "Complete API collection for RAG Document Processing system with document upload, query, and management endpoints.",
+    "version": "1.0.0",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "auth": {
+    "type": "noauth"
+  },
+  "item": [
+    {
+      "name": "Health Check",
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Accept",
+            "value": "application/json",
+            "type": "text"
+          }
+        ],
+        "url": {
+          "raw": "{{base_url}}/health",
+          "host": ["{{base_url}}"],
+          "path": ["health"]
+        },
+        "description": "Check if the API server is healthy and responding"
+      },
+      "response": [
+        {
+          "name": "Health Check - Success",
+          "originalRequest": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/health",
+              "host": ["{{base_url}}"],
+              "path": ["health"]
+            }
+          },
+          "status": "OK",
+          "code": 200,
+          "_postman_previewlanguage": "json",
+          "header": [
+            {
+              "key": "Content-Type",
+              "value": "application/json"
+            }
+          ],
+          "cookie": [],
+          "body": "{\n  \"status\": \"healthy\",\n  \"timestamp\": \"2024-01-15T10:30:00Z\"\n}"
+        }
+      ]
+    },
+    {
+      "name": "Root Endpoint",
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Accept",
+            "value": "application/json",
+            "type": "text"
+          }
+        ],
+        "url": {
+          "raw": "{{base_url}}/",
+          "host": ["{{base_url}}"],
+          "path": [""]
+        },
+        "description": "Get API information and version"
+      },
+      "response": [
+        {
+          "name": "Root - Success",
+          "originalRequest": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/",
+              "host": ["{{base_url}}"],
+              "path": [""]
+            }
+          },
+          "status": "OK",
+          "code": 200,
+          "_postman_previewlanguage": "json",
+          "header": [
+            {
+              "key": "Content-Type",
+              "value": "application/json"
+            }
+          ],
+          "cookie": [],
+          "body": "{\n  \"message\": \"RAG Document Processing API\",\n  \"version\": \"1.0.0\"\n}"
+        }
+      ]
+    },
+    {
+      "name": "Upload Document",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Accept",
+            "value": "application/json",
+            "type": "text"
+          }
+        ],
+        "body": {
+          "mode": "formdata",
+          "formdata": [
+            {
+              "key": "file",
+              "type": "file",
+              "src": [],
+              "description": "Document file to upload (PDF, TXT, DOCX)"
+            }
+          ]
+        },
+        "url": {
+          "raw": "{{base_url}}/documents/upload",
+          "host": ["{{base_url}}"],
+          "path": ["documents", "upload"]
+        },
+        "description": "Upload and process a document for RAG system. Supports PDF, TXT, and DOCX files up to 10MB."
+      },
+      "response": [
+        {
+          "name": "Upload Document - Success",
+          "originalRequest": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "file",
+                  "type": "file",
+                  "src": "sample.pdf"
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{base_url}}/documents/upload",
+              "host": ["{{base_url}}"],
+              "path": ["documents", "upload"]
+            }
+          },
+          "status": "OK",
+          "code": 200,
+          "_postman_previewlanguage": "json",
+          "header": [
+            {
+              "key": "Content-Type",
+              "value": "application/json"
+            }
+          ],
+          "cookie": [],
+          "body": "{\n  \"id\": \"550e8400-e29b-41d4-a716-446655440000\",\n  \"filename\": \"sample.pdf\",\n  \"file_size\": 1024000,\n  \"chunk_count\": 15,\n  \"status\": \"processed\",\n  \"created_at\": \"2024-01-15T10:30:00Z\"\n}"
+        },
+        {
+          "name": "Upload Document - Unsupported File Type",
+          "originalRequest": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "file",
+                  "type": "file",
+                  "src": "unsupported.xyz"
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{base_url}}/documents/upload",
+              "host": ["{{base_url}}"],
+              "path": ["documents", "upload"]
+            }
+          },
+          "status": "Bad Request",
+          "code": 400,
+          "_postman_previewlanguage": "json",
+          "header": [
+            {
+              "key": "Content-Type",
+              "value": "application/json"
+            }
+          ],
+          "cookie": [],
+          "body": "{\n  \"detail\": \"Unsupported file type\"\n}"
+        }
+      ]
+    },
+    {
+      "name": "List Documents",
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Accept",
+            "value": "application/json",
+            "type": "text"
+          }
+        ],
+        "url": {
+          "raw": "{{base_url}}/documents",
+          "host": ["{{base_url}}"],
+          "path": ["documents"]
+        },
+        "description": "Get list of all processed documents with metadata"
+      },
+      "response": [
+        {
+          "name": "List Documents - Success",
+          "originalRequest": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/documents",
+              "host": ["{{base_url}}"],
+              "path": ["documents"]
+            }
+          },
+          "status": "OK",
+          "code": 200,
+          "_postman_previewlanguage": "json",
+          "header": [
+            {
+              "key": "Content-Type",
+              "value": "application/json"
+            }
+          ],
+          "cookie": [],
+          "body": "[\n  {\n    \"id\": \"550e8400-e29b-41d4-a716-446655440000\",\n    \"filename\": \"document1.pdf\",\n    \"file_size\": 1024000,\n    \"chunk_count\": 15,\n    \"status\": \"processed\",\n    \"created_at\": \"2024-01-15T10:30:00Z\"\n  },\n  {\n    \"id\": \"550e8400-e29b-41d4-a716-446655440001\",\n    \"filename\": \"document2.txt\",\n    \"file_size\": 2048,\n    \"chunk_count\": 3,\n    \"status\": \"processed\",\n    \"created_at\": \"2024-01-15T10:35:00Z\"\n  }\n]"
+        }
+      ]
+    },
+    {
+      "name": "Query Documents",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json",
+            "type": "text"
+          },
+          {
+            "key": "Accept",
+            "value": "application/json",
+            "type": "text"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"question\": \"What is artificial intelligence?\",\n  \"max_results\": 5\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "{{base_url}}/query",
+          "host": ["{{base_url}}"],
+          "path": ["query"]
+        },
+        "description": "Query the RAG system with a user question. Retrieves relevant document chunks and generates an AI response."
+      },
+      "response": [
+        {
+          "name": "Query - Success",
+          "originalRequest": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"question\": \"What is artificial intelligence?\",\n  \"max_results\": 5\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_url}}/query",
+              "host": ["{{base_url}}"],
+              "path": ["query"]
+            }
+          },
+          "status": "OK",
+          "code": 200,
+          "_postman_previewlanguage": "json",
+          "header": [
+            {
+              "key": "Content-Type",
+              "value": "application/json"
+            }
+          ],
+          "cookie": [],
+          "body": "{\n  \"question\": \"What is artificial intelligence?\",\n  \"answer\": \"Based on the uploaded documents, artificial intelligence (AI) refers to the simulation of human intelligence processes by machines, especially computer systems. These processes include learning, reasoning, and self-correction.\",\n  \"sources\": [\n    {\n      \"document_id\": \"550e8400-e29b-41d4-a716-446655440000\",\n      \"document_name\": \"ai_guide.pdf\",\n      \"chunk_id\": \"chunk_1\",\n      \"relevance_score\": 0.95\n    },\n    {\n      \"document_id\": \"550e8400-e29b-41d4-a716-446655440001\",\n      \"document_name\": \"tech_overview.txt\",\n      \"chunk_id\": \"chunk_3\",\n      \"relevance_score\": 0.87\n    }\n  ],\n  \"confidence\": 0.95\n}"
+        },
+        {
+          "name": "Query - No Documents",
+          "originalRequest": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"question\": \"What is machine learning?\",\n  \"max_results\": 5\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_url}}/query",
+              "host": ["{{base_url}}"],
+              "path": ["query"]
+            }
+          },
+          "status": "Bad Request",
+          "code": 400,
+          "_postman_previewlanguage": "json",
+          "header": [
+            {
+              "key": "Content-Type",
+              "value": "application/json"
+            }
+          ],
+          "cookie": [],
+          "body": "{\n  \"detail\": \"No processed documents available for querying\"\n}"
+        }
+      ]
+    },
+    {
+      "name": "Delete Document",
+      "request": {
+        "method": "DELETE",
+        "header": [
+          {
+            "key": "Accept",
+            "value": "application/json",
+            "type": "text"
+          }
+        ],
+        "url": {
+          "raw": "{{base_url}}/documents/{{document_id}}",
+          "host": ["{{base_url}}"],
+          "path": ["documents", "{{document_id}}"]
+        },
+        "description": "Delete a document and its associated chunks from the system"
+      },
+      "response": [
+        {
+          "name": "Delete Document - Success",
+          "originalRequest": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/documents/550e8400-e29b-41d4-a716-446655440000",
+              "host": ["{{base_url}}"],
+              "path": ["documents", "550e8400-e29b-41d4-a716-446655440000"]
+            }
+          },
+          "status": "OK",
+          "code": 200,
+          "_postman_previewlanguage": "json",
+          "header": [
+            {
+              "key": "Content-Type",
+              "value": "application/json"
+            }
+          ],
+          "cookie": [],
+          "body": "{\n  \"message\": \"Document sample.pdf deleted successfully\"\n}"
+        },
+        {
+          "name": "Delete Document - Not Found",
+          "originalRequest": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/documents/non-existent-id",
+              "host": ["{{base_url}}"],
+              "path": ["documents", "non-existent-id"]
+            }
+          },
+          "status": "Not Found",
+          "code": 404,
+          "_postman_previewlanguage": "json",
+          "header": [
+            {
+              "key": "Content-Type",
+              "value": "application/json"
+            }
+          ],
+          "cookie": [],
+          "body": "{\n  \"detail\": \"Document not found\"\n}"
+        }
+      ]
+    }
+  ],
+  "event": [
+    {
+      "listen": "prerequest",
+      "script": {
+        "type": "text/javascript",
+        "exec": [
+          "// Set timestamp for requests",
+          "pm.globals.set(\"timestamp\", new Date().toISOString());"
+        ]
+      }
+    },
+    {
+      "listen": "test",
+      "script": {
+        "type": "text/javascript",
+        "exec": [
+          "// Global test to check response time",
+          "pm.test(\"Response time is less than 10s\", function () {",
+          "    pm.expect(pm.response.responseTime).to.be.below(10000);",
+          "});",
+          "",
+          "// Global test to check content type for JSON endpoints",
+          "if (pm.response.headers.get(\"Content-Type\") && pm.response.headers.get(\"Content-Type\").includes(\"application/json\")) {",
+          "    pm.test(\"Response is valid JSON\", function () {",
+          "        pm.response.to.be.json;",
+          "    });",
+          "}"
+        ]
+      }
+    }
+  ],
+  "variable": [
+    {
+      "key": "base_url",
+      "value": "http://localhost:8000",
+      "description": "Base URL for the RAG Document Processing API"
+    },
+    {
+      "key": "document_id",
+      "value": "550e8400-e29b-41d4-a716-446655440000",
+      "description": "Sample document ID for testing delete operations"
+    }
+  ]
+}
