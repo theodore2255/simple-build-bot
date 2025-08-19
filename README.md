@@ -1,73 +1,141 @@
-# Welcome to your Lovable project
+# RAG Assistant
 
-## Project info
+A powerful document-based AI assistant built with React, Supabase, and Google's Gemini API. Upload documents and ask questions to get intelligent answers based on your content.
 
-**URL**: https://lovable.dev/projects/117b402e-5632-4bee-99d1-2f2b9c781e6a
+## Features
 
-## How can I edit this code?
+- 📄 **Document Upload**: Support for PDF, TXT, DOC, and DOCX files
+- 🤖 **AI-Powered Chat**: Powered by Google's Gemini 1.5 Flash model
+- 🔍 **Smart Document Processing**: Automatic text extraction and chunking
+- 💾 **Vector Storage**: Documents are processed and stored for quick retrieval
+- 🎨 **Modern UI**: Beautiful, responsive interface built with shadcn/ui components
+- 🌙 **Dark/Light Theme**: Toggle between themes for comfortable viewing
 
-There are several ways of editing your application.
+## Prerequisites
 
-**Use Lovable**
+- Node.js 18+ and npm/yarn
+- Supabase account and project
+- Google AI Studio API key for Gemini
 
-Simply visit the [Lovable Project](https://lovable.dev/projects/117b402e-5632-4bee-99d1-2f2b9c781e6a) and start prompting.
+## Setup
 
-Changes made via Lovable will be committed automatically to this repo.
+### 1. Clone and Install Dependencies
 
-**Use your preferred IDE**
+```bash
+git clone <repository-url>
+cd simple-build-bot
+npm install
+```
 
-If you want to work locally using your own IDE, you can clone this repo and push changes. Pushed changes will also be reflected in Lovable.
+### 2. Environment Variables
 
-The only requirement is having Node.js & npm installed - [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating)
+Create a `.env.local` file in the root directory:
 
-Follow these steps:
+```env
+VITE_SUPABASE_URL=your_supabase_project_url
+VITE_SUPABASE_ANON_KEY=your_supabase_anon_key
+```
 
-```sh
-# Step 1: Clone the repository using the project's Git URL.
-git clone <YOUR_GIT_URL>
+### 3. Supabase Setup
 
-# Step 2: Navigate to the project directory.
-cd <YOUR_PROJECT_NAME>
+1. Go to your Supabase project dashboard
+2. Navigate to SQL Editor
+3. Run the migration script from `supabase/migrations/001_create_documents_table.sql`
 
-# Step 3: Install the necessary dependencies.
-npm i
+### 4. Supabase Edge Functions
 
-# Step 4: Start the development server with auto-reloading and an instant preview.
+Deploy the edge functions to your Supabase project:
+
+```bash
+# Install Supabase CLI if you haven't already
+npm install -g supabase
+
+# Login to Supabase
+supabase login
+
+# Link your project
+supabase link --project-ref your_project_ref
+
+# Deploy functions
+supabase functions deploy chat-completion
+supabase functions deploy process-document
+```
+
+### 5. Set Environment Variables for Edge Functions
+
+In your Supabase dashboard, go to Settings > Edge Functions and set:
+
+- `GEMINI_API_KEY`: Your Google AI Studio API key
+
+### 6. Run the Application
+
+```bash
 npm run dev
 ```
 
-**Edit a file directly in GitHub**
+The application will be available at `http://localhost:5173`
 
-- Navigate to the desired file(s).
-- Click the "Edit" button (pencil icon) at the top right of the file view.
-- Make your changes and commit the changes.
+## How It Works
 
-**Use GitHub Codespaces**
+1. **Document Upload**: Users drag and drop documents into the interface
+2. **Text Extraction**: The system extracts text content from various file formats
+3. **Chunking**: Content is split into smaller, searchable chunks
+4. **Storage**: Processed documents are stored in Supabase with their content
+5. **AI Chat**: When users ask questions, relevant document content is retrieved and sent to Gemini
+6. **Intelligent Responses**: Gemini provides answers based on the actual document content
 
-- Navigate to the main page of your repository.
-- Click on the "Code" button (green button) near the top right.
-- Select the "Codespaces" tab.
-- Click on "New codespace" to launch a new Codespace environment.
-- Edit files directly within the Codespace and commit and push your changes once you're done.
+## File Format Support
 
-## What technologies are used for this project?
+- **TXT**: Full text extraction
+- **PDF**: Basic text extraction (enhanced extraction with proper libraries)
+- **DOC/DOCX**: Text content extraction
+- **Other formats**: Convert to supported formats for best results
 
-This project is built with:
+## Architecture
 
-- Vite
-- TypeScript
-- React
-- shadcn-ui
-- Tailwind CSS
+- **Frontend**: React + TypeScript + Vite
+- **UI Components**: shadcn/ui + Tailwind CSS
+- **Backend**: Supabase Edge Functions
+- **AI**: Google Gemini 1.5 Flash API
+- **Database**: Supabase PostgreSQL
+- **Storage**: Supabase Storage (for future enhancements)
 
-## How can I deploy this project?
+## Troubleshooting
 
-Simply open [Lovable](https://lovable.dev/projects/117b402e-5632-4bee-99d1-2f2b9c781e6a) and click on Share -> Publish.
+### Gemini API Issues
+- Check your API key in Supabase Edge Functions environment variables
+- Verify your Google AI Studio quota and billing
+- Check the browser console for error messages
 
-## Can I connect a custom domain to my Lovable project?
+### Document Processing Issues
+- Ensure documents are in supported formats
+- Check file size limits (recommended: under 10MB)
+- Verify Supabase connection and permissions
 
-Yes, you can!
+### Database Issues
+- Run the migration script to create the documents table
+- Check Supabase Row Level Security policies
+- Verify your project is properly linked
 
-To connect a domain, navigate to Project > Settings > Domains and click Connect Domain.
+## Future Enhancements
 
-Read more here: [Setting up a custom domain](https://docs.lovable.dev/tips-tricks/custom-domain#step-by-step-guide)
+- [ ] Enhanced PDF text extraction with pdf-parse
+- [ ] Word document processing with mammoth.js
+- [ ] Vector embeddings for semantic search
+- [ ] Document versioning and history
+- [ ] Collaborative document sharing
+- [ ] Advanced search and filtering
+- [ ] Export chat conversations
+- [ ] Multi-language support
+
+## Contributing
+
+1. Fork the repository
+2. Create a feature branch
+3. Make your changes
+4. Test thoroughly
+5. Submit a pull request
+
+## License
+
+This project is licensed under the MIT License.

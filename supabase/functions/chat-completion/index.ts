@@ -23,13 +23,21 @@ serve(async (req) => {
 
     // Build the system prompt with document context
     let systemContent = `You are a helpful AI assistant that answers questions based on uploaded documents. 
-    You should provide accurate, helpful responses based on the context provided from the user's documents.
     
-    If you reference information from the documents, be specific about which document or section you're citing.
-    If you cannot find relevant information in the provided context, say so clearly.`;
+    IMPORTANT INSTRUCTIONS:
+    1. ALWAYS use the provided document context to answer questions
+    2. If the user asks about a document, analyze the content thoroughly
+    3. Provide specific, detailed answers based on the document content
+    4. Quote relevant sections from the documents when appropriate
+    5. If you cannot find relevant information in the provided context, say so clearly
+    6. Be helpful and informative, but always base your responses on the document content
+    
+    Your responses should demonstrate that you have read and understood the uploaded documents.`;
 
     if (documentContext && documentContext.length > 0) {
-      systemContent += `\n\nHere is the relevant context from the user's documents:\n${documentContext.join('\n\n')}`;
+      systemContent += `\n\nDOCUMENT CONTEXT (Use this information to answer questions):\n${documentContext.join('\n\n---\n\n')}`;
+    } else {
+      systemContent += `\n\nNo documents have been uploaded yet. Please ask the user to upload documents first.`;
     }
 
     // Format messages for Gemini API
